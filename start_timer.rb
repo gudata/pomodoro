@@ -1,5 +1,9 @@
 #!/usr/bin/env ruby
 
+require 'optparse'
+
+
+
 class Mplayer
   def self.play_file(file)
     run = "mplayer #{file} -ao sdl -vo x11 -framedrop -cache 16384 -cache-min 20/100 -really-quiet"
@@ -9,13 +13,14 @@ end
 
 class Pomodore
   WORK = {:kind => :work, :time  => 25, :message => "Work", :sound_before => "startup1.wav"}
-  BREAK = {:kind => :break, :time => 5, :message => "Have a break", :sound_after => "break.wav"}
-  BIG_BREAK = {:kind => :big_break, :time => 15, :message => "Have a BIIIIIIG break", :sound_after => "big_break.wav"}
+  BREAK = {:kind => :break, :time => 5, :message => "Have a break", :sound_before => "break.wav"}
+  BIG_BREAK = {:kind => :big_break, :time => 15, :message => "Have a BIIIIIIG break", :sound_before => "big_break.wav"}
 
   WORK_CYCLES_PER_DAY = 16
 
 
-  def initialize
+  def initialize options
+   @options = options
    work_cycle = []
    4.times{work_cycle << WORK <<  BREAK}
    work_cycle << BIG_BREAK
@@ -24,6 +29,8 @@ class Pomodore
    WORK_CYCLES_PER_DAY.times{ @work_day << work_cycle}
    @work_day.flatten!
    @current = 0
+   
+   @work_day.shift if options
   end
 
 
@@ -37,7 +44,7 @@ class Pomodore
       now = Time.now
       alarm_at = now + interval[:time]*60
       puts "#{interval[:message]} till #{alarm_at}"
-      sleep(25*60);
+      sleep(interval[:time]*60);
 
       if interval[:sound_after]
         mp3 = File.join(File.dirname(__FILE__), "sounds", interval[:sound_after])
@@ -48,4 +55,35 @@ class Pomodore
 
 end
 
-Pomodore.new.run
+options = {}
+
+optparse = OptionParser.new do|opts|
+   # Set a banner, displayed at the top
+   # of the help screen.
+   opts.banner = "Usage: start_timer.rb [options]"
+ 
+   # Define the options, and what they do
+   options[:break] = false
+   opts.on('-b', '--break', 'Start with a break' ) do
+     options[:break] = true
+   end
+
+   options[:big_break] = false
+   opts.on('-B', '--big_break', 'Start with the big break (not supported)' ) do
+     options[:break] = true
+   end
+ 
+   opts.on('-h', '--help', 'Display this screen' ) do
+     puts opts
+     exit
+   end
+ end
+ 
+ # Parse the command-line. Remember there are two forms
+ # of the parse method. The 'parse' method simply parses
+ # ARGV, while the 'parse!' method parses ARGV and removes
+ # any options found there, as well as any parameters for
+ # the options. What's left is the list of files to resize.
+ optparse.parse!
+ 
+Pomodore.new(options).run
