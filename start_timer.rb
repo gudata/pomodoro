@@ -1,8 +1,5 @@
 #!/usr/bin/env ruby
-
 require 'optparse'
-
-
 
 class Mplayer
   def self.play_file(file)
@@ -11,7 +8,7 @@ class Mplayer
   end
 end
 
-class Pomodore
+class Pomodoro
   WORK = {:kind => :work, :time  => 25, :message => "Work", :sound_before => "startup1.wav"}
   BREAK = {:kind => :break, :time => 5, :message => "Have a break", :sound_before => "break.wav"}
   BIG_BREAK = {:kind => :big_break, :time => 15, :message => "Have a BIIIIIIG break", :sound_before => "big_break.wav"}
@@ -30,7 +27,7 @@ class Pomodore
    @work_day.flatten!
    @current = 0
    
-   @work_day.shift if options
+   @work_day.shift if options[:break]
   end
 
 
@@ -79,11 +76,6 @@ optparse = OptionParser.new do|opts|
    end
  end
  
- # Parse the command-line. Remember there are two forms
- # of the parse method. The 'parse' method simply parses
- # ARGV, while the 'parse!' method parses ARGV and removes
- # any options found there, as well as any parameters for
- # the options. What's left is the list of files to resize.
- optparse.parse!
+optparse.parse!
  
-Pomodore.new(options).run
+Pomodoro.new(options).run
